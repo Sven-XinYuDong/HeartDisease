@@ -1,0 +1,131 @@
+---
+title: "Project Report - Code"
+author: "Xinyu Dong"
+date: "2023-03-17"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Decision Tree
+
+### Fiting and Tunning
+
+```{r,fig.align = 'center',out.width="50%"}
+# Load data
+library(readr)
+heart_2020 <- read.csv("heart_2020_cleaned.csv",stringsAsFactors = TRUE)
+
+library(tree)
+
+
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = heart_2020)
+
+
+heart.treecv <- cv.tree(model.trees) # Cross-validation
+plot(heart.treecv) 
+
+# Tuning
+heart.tree.prune <- prune.misclass(model.trees, best=5)
+plot(heart.tree.prune)
+text(heart.tree.prune,pretty = 0)
+
+```
+
+This is a seemingly strange but interesting decision tree. We can see from the results of the decision tree that the most certain thing about the decision tree is that if you are **under 54 years** of age and **in good overall health**, then the decision tree will assume that you will not develop heart disease. Other factors such as mental health, race, physical activity, etc., have little impact on whether or not you will develop heart disease if you meet the age and overall health criteria.
+
+Now we have identified the low risk group: *they are under 45 years of age and their overall health is good or above*. So let's go a step further and identify those who are not in this range. We will remove the people who meet the age under 45 and overall overall health. The conclusion is that the decision tree is still trying to identify people who do not have heart disease by their age and overall health status. Therefore, we directly remove the union set that satisfies both categories.
+
+```{r,fig.align = 'center',out.width="50%"}
+obs_not_low_risk <- subset(heart_2020,!(AgeCategory %in% c('18-24',
+                                                           '25-29',
+                                                     '30-34',
+                                                     '35-39',
+                                                     '40-44',
+                                                     '45-49',
+                                                     '50-54') |
+                         
+                                 GenHealth %in% c('Good','Very good','Excellent'))
+                         )
+
+#New data Investigation 
+dim(obs_not_low_risk)
+nrow(obs_not_low_risk)/nrow(heart_2020)
+prop.table(table(obs_not_low_risk$HeartDisease))
+prop.table(table(heart_2020$HeartDisease))
+
+```
+
+After removing those who passed age threshold and were in good overall health, we selected a total sample of 31,857 (only 9.96% of the total sample). The proportion of people suffering from heart disease in this sample rose to 29.76%. Compared to only 8.6% for the entire sample frame, it is already a significant and encouraging improvement - don't forget that we are only referring to the simple conditions of age 45+ and overall health below health.
+
+```{r,fig.align = 'center',out.width="50%"}
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = obs_not_low_risk)
+
+
+heart.treecv <- cv.tree(model.trees) # Cross-validation
+plot(heart.treecv) 
+
+# Tuning
+heart.tree.prune <- prune.misclass(model.trees, best=3)
+plot(heart.tree.prune)
+text(heart.tree.prune,pretty = 0)
+
+
+Stroked <- subset(obs_not_low_risk,Stroke == 'Yes')
+
+#New data Investigation 
+dim(Stroked)
+nrow(Stroked)/nrow(heart_2020)
+prop.table(table(Stroked$HeartDisease))
+prop.table(table(heart_2020$HeartDisease))
+```
+
+Taking the screened non-low-risk people to the next step of decision tree regression, we identified another important signal: **whether or not the person had a stroke.** If there was no stroke the decision tree would assume that the person would not have had a heart attack. In fact if we pick out the people who are already in our risk population who also had a stroke, we can see that the risk of having heart disease if they had a stroke increased from 29.76 to 49.65%. This is also a significant increase. Such a result is not difficult to explain. Stroke is often associated with hardening and blockage of blood vessels, and this often indicates that the patient has a worse blood circulation, which is also an indicator of heart disease. Now that we have greatly identified our high-risk group by age, overall health status, and whether or not we have had a stroke. Let's go one step further and see if there are other factors that can help us determine this. We'll use the data from the further targeted high-risk group in a decision tree regression.\
+
+```{r,fig.align = 'center',out.width="50%"}
+
+
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = Stroked)
+
+# Tuning
+#heart.treecv <- cv.tree(model.trees) # Cross-validation
+#plot(heart.treecv) 
+
+
+plot(model.trees)
+text(model.trees,pretty = 0)
+
+
+
+tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
+
+```
+
+We were given the simplest decision tree, whether it was male or female. What it tells us is that for these people who are more prone to heart disease, men are at higher risk than women (56.54 for men and 43.72% for women).
+
+The ramification plot is
+
+```{r,fig.align = 'center',out.width="50%"}
+# To be ploted 
+probability <- c(0.2976 ,0.4965,0.5654)
+
+```
+
+![](PNG%20image.png)
+
+### Model Interpreatation
+
+To be organized
+
+## Logistic Regression
+
+### Fiting and Tunning
+
+### Model Interpreatation
