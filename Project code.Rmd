@@ -124,8 +124,79 @@ probability <- c(0.2976 ,0.4965,0.5654)
 
 To be organized
 
-## Logistic Regression
+## logistic regression
 
 ### Fiting and Tunning
+```{r}
+
+heart.logistic <- glm(HeartDisease~.,data = heart_2020,family = 'binomial')
+
+#summary(heart.logistic)
+stepwise_model <- step(heart.logistic, direction = "both", k = log(nrow(heart_2020)), trace = 0)
+
+summary(stepwise_model)
+
+```
+- Based on this model we can hava a quantitative understanding of this model. Considering the AgeCategory which is considered as the most dominant factor in our decision tree. Their coeffiecnts can be show as 
+
+```{r}
+library(ggplot2)
+coef <- c(0.1270495,
+         0.4866544,
+         0.5948967,
+         0.9958578,
+         1.3184067,
+         1.7268540,
+         1.9641295,
+         2.2261981,
+         2.4682742,
+         2.7536005,
+         2.9551423,
+         3.2117057)
+
+
+
+coef_sd <- c(
+  0.1241807,
+  0.1110910,
+  0.1063721,
+  0.1000683,
+  0.0964936,
+  0.0931507,
+  0.0916889,
+  0.0908493,
+  0.0905748,
+  0.0905089,
+  0.0910431,
+  0.0907736
+)
+
+
+ageCategroy <- c( '25-29',
+'30-34',
+'35-39',
+'40-44',
+'45-49',
+'50-54',
+'55-59',
+'60-64',
+'65-69',
+'70-74',
+'75-79',
+'80 or older')
+
+
+coefframe <- data.frame(ageCategroy,coef,coef_sd)
+
+ggplot(coefframe, aes(ageCategroy, coef)) +
+  geom_errorbar(aes(ymin = coef - coef_sd, ymax = coef + coef_sd), width = 0.2) +
+  geom_point() +
+  labs(title = "Coeffients Graph of Age Category and Standard Deviation") +
+  xlab("Age Category") +
+  ylab("Coefficients Value")+
+  theme_bw()
+
+```
+
 
 ### Model Interpreatation
