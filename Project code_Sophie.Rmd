@@ -14,6 +14,21 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Dataset Introduction and 
 There are 14 categorical and 4 numerical variables in the dataset, and our target variable is “HeartDisease”. This is a clean dataset without any missing data. Among the 319,795 observations, we removed 18,078 duplicates. Therefore, the following explanatory data analysis would only perform on 301,717 observations.
 
+
+## Data Processed
+```{r}
+library(dplyr)
+
+data <- read.csv("heart_2020_cleaned.csv")
+# head(data)
+
+heart_2020 <- data[!duplicated(data), ]  # remove duplicate data
+heart_2020$Race[heart_2020$Race != "White"] <- "non-white" # make race binary 
+
+heart_2020 %>% mutate_if(is.character, as.factor) -> heart_2020
+```
+
+
 ## Decision Tree
 Through the explanatory analysis, we found that our target variable *HeartDisease* is unbalanced which most of the cases do not have heart disease.
 
@@ -22,7 +37,6 @@ Through the explanatory analysis, we found that our target variable *HeartDiseas
 ```{r,fig.align = 'center',out.width="50%"}
 # Load data
 library(readr)
-heart_2020 <- read.csv("heart_2020_cleaned.csv",stringsAsFactors = TRUE)
 
 library(tree)
 
@@ -133,17 +147,7 @@ Logistic regression is a statistical method used to analyze and model relationsh
 
 ### Fiting and Tunning
 
-```{r}
-library(dplyr)
 
-data <- read.csv("heart_2020_cleaned.csv")
-# head(data)
-
-heart_2020 <- data[!duplicated(data), ]  # remove duplicate data
-heart_2020$Race[heart_2020$Race != "White"] <- "non-white" # make race binary 
-
-heart_2020 %>% mutate_if(is.character, as.factor) -> heart_2020
-```
 
 ```{r}
 
@@ -176,7 +180,7 @@ summary(heart_logistic_interaction)
 After stepwise selection, the predictors *PhysicalActivity* was removed from the heart.logistic model, we can apply F-test to see if the reduced model is statistically better. Since the p-value 0.0007 is pretty small at 0.05 significant level, hence, the reduced model is significantly better than the full model.
 
 ```{r}
-anova(stepwise_model, heart.logistic)
+anova(stepwise_model, heart.logistic,test = "Chisq")
 1 - pchisq(14.476,2) # 1.5329 is the deviance difference
 stepwise_model$formula
 ```
