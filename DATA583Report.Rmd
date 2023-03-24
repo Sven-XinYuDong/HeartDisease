@@ -203,7 +203,7 @@ tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
 ```
 
 | Groups                      | Condition                                         | Probability of Having Heart Disease |
-|-----------------------------|---------------------------------------------------|-------------------------------------|
+|-------------------|-----------------|------------------------------------|
 | Whole population benchmark  | NA                                                | 9.03%                               |
 | Low risky group             | Age below 59 or in general good health condition  | 6.85%                               |
 | High risky group            | Age above 60 or in health condition below good    | 31.10%                              |
