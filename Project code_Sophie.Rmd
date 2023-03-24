@@ -1,6 +1,6 @@
 ---
 title: "Project Report - Code"
-author: "Xinyu Dong", "CHEN ZIYING(Sophie)", "Yau Matthew"
+author: "Xinyu Dong", "CHEN ZIYING(Sophie)", "Yau Matthew"    
 date: "2023-03-17"
 output:
   pdf_document: default
@@ -11,7 +11,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Dataset Introduction and 
+There are 14 categorical and 4 numerical variables in the dataset, and our target variable is “HeartDisease”. This is a clean dataset without any missing data. Among the 319,795 observations, we removed 18,078 duplicates. Therefore, the following explanatory data analysis would only perform on 301,717 observations.
+
 ## Decision Tree
+Through the explanatory analysis, we found that our target variable *HeartDisease* is unbalanced which most of the cases do not have heart disease.
 
 ### Fiting and Tunning
 
@@ -125,19 +129,91 @@ probability <- c(0.2976 ,0.4965,0.5654)
 To be organized
 
 ## logistic regression
+Logistic regression is a statistical method used to analyze and model relationships between a binary dependent variable (i.e., one that takes on only two values, such as 0 or 1) and one or more independent variables (also known as predictors or explanatory variables). It is a type of regression analysis that is used to predict the probability of an event occurring based on the values of the independent variables.
 
 ### Fiting and Tunning
+
+```{r}
+library(dplyr)
+
+data <- read.csv("heart_2020_cleaned.csv")
+# head(data)
+
+heart_2020 <- data[!duplicated(data), ]  # remove duplicate data
+heart_2020$Race[heart_2020$Race != "White"] <- "non-white" # make race binary 
+
+heart_2020 %>% mutate_if(is.character, as.factor) -> heart_2020
+```
+
 ```{r}
 
 heart.logistic <- glm(HeartDisease~.,data = heart_2020,family = 'binomial')
 
-#summary(heart.logistic)
+summary(heart.logistic)
 stepwise_model <- step(heart.logistic, direction = "both", k = log(nrow(heart_2020)), trace = 0)
 
 summary(stepwise_model)
 
+# calculate R^2
+nullmod <- glm(HeartDisease~1, data = heart_2020, family="binomial")
+
+1-logLik(heart.logistic)/logLik(nullmod)
+1-logLik(stepwise_model)/logLik(nullmod)
 ```
+### Add interaction terms
+The R squared of these two are similar and both poor, so we decided to try adding interaction terms to see if we can predict heart disease better. Interaction term shows that one's effect on response variable depends on the other, with only one of the variable might not have predictive power, but combine them together, we can predict. In case other predictors depends on *PhysicalActivity* (which removed by stepwise process), we keep it to build the model with all interaction terms.
+```{r}
+formula <- HeartDisease ~ BMI * Smoking * AlcoholDrinking * Stroke * MentalHealth * DiffWalking * Sex * AgeCategory * 
+    Race * Diabetic * GenHealth * SleepTime * Asthma * KidneyDisease * SkinCancer * PhysicalActivity
+
+heart_logistic_interaction <- glm(formula = formula, data = heart_2020, family = 'binomial')
+summary(heart_logistic_interaction)
+1-logLik(heart_logistic_interaction)/logLik(nullmod)
+```
+
+
+### Analysis of the model
+After stepwise selection, the predictors *PhysicalActivity* was removed from the heart.logistic model, we can apply F-test to see if the reduced model is statistically better. Since the p-value 0.0007 is pretty small at 0.05 significant level, hence, the reduced model is significantly better than the full model.
+
+```{r}
+anova(stepwise_model, heart.logistic)
+1 - pchisq(14.476,2) # 1.5329 is the deviance difference
+stepwise_model$formula
+```
+
+### Model Checking
+Applying bootstrap to check the model, each term in the log-likelihood sum should be reasonably large in the model. Any terms that are very small indicates the failure to be modeled properly.
+
+```{r}
+library(boot)  
+set.seed(92573948)
+logit_test <- function(data,indices) {  
+d <- data[indices,]  
+fit <- glm(HeartDisease ~ BMI + Smoking + AlcoholDrinking + Stroke + MentalHealth + 
+    DiffWalking + Sex + AgeCategory + Race + Diabetic + GenHealth + 
+    SleepTime + Asthma + KidneyDisease + SkinCancer, data = d, family = "binomial")  
+return(coef(fit))  
+}
+boot_fit <- boot(  
+   data = heart_2020, 
+   statistic = logit_test, 
+   R = 100
+) 
+```
+
+```{r}
+boot_fit
+plot(boot_fit, index=2)
+```
+
+
+
+
 - Based on this model we can hava a quantitative understanding of this model. Considering the AgeCategory which is considered as the most dominant factor in our decision tree. Their coeffiecnts can be show as 
+```{r}
+stepwise_model$coefficients
+```
+
 
 ```{r}
 library(ggplot2)
