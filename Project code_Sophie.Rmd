@@ -1,14 +1,18 @@
 ---
 title: "Project Report - Code"
-author: "Xinyu Dong", "CHEN ZIYING(Sophie)", "Yau Matthew"    
-date: "2023-03-17"
+author: "Matthew Yau, ZiYing(Sophie) Chen, Xinyu Dong"
+date: "2023-03-09"
 output:
-  pdf_document: default
-  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 11pt
+fig_height: 6
+fig_width: 6
+df_print: kable
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## Dataset Introduction and 
@@ -34,6 +38,10 @@ Through the explanatory analysis, we found that our target variable *HeartDiseas
 
 ### Fiting and Tunning
 
+This is a seemingly strange but interesting decision tree. We can see from the results of the decision tree that the most certain thing about the decision tree is that if you are **under 54 years** of age and **in good overall health**, then the decision tree will assume that you will not develop heart disease. Other factors such as mental health, race, physical activity, etc., have little impact on whether or not you will develop heart disease if you meet the age and overall health criteria.
+
+Now we have identified the low risk group: *they are under 45 years of age and their overall health is good or above*. So let's go a step further and identify those who are not in this range. We will remove the people who meet the age under 45 and overall overall health. The conclusion is that the decision tree is still trying to identify people who do not have heart disease by their age and overall health status. Therefore, we directly remove the union set that satisfies both categories.
+
 ```{r,fig.align = 'center',out.width="50%"}
 # Load data
 library(readr)
@@ -54,10 +62,8 @@ plot(heart.tree.prune)
 text(heart.tree.prune,pretty = 0)
 
 ```
+After removing those who passed age threshold and were in good overall health, we selected a total sample of 31,837 (only 10.55% of the total sample). The proportion of people suffering from heart disease in this sample rose to 29.78%. Compared to only 9.0% for the entire sample frame, it is already a significant and encouraging improvement - don't forget that we are only referring to the simple conditions of age 54+ and overall health below health.
 
-This is a seemingly strange but interesting decision tree. We can see from the results of the decision tree that the most certain thing about the decision tree is that if you are **under 54 years** of age and **in good overall health**, then the decision tree will assume that you will not develop heart disease. Other factors such as mental health, race, physical activity, etc., have little impact on whether or not you will develop heart disease if you meet the age and overall health criteria.
-
-Now we have identified the low risk group: *they are under 45 years of age and their overall health is good or above*. So let's go a step further and identify those who are not in this range. We will remove the people who meet the age under 45 and overall overall health. The conclusion is that the decision tree is still trying to identify people who do not have heart disease by their age and overall health status. Therefore, we directly remove the union set that satisfies both categories.
 
 ```{r,fig.align = 'center',out.width="50%"}
 obs_not_low_risk <- subset(heart_2020,!(AgeCategory %in% c('18-24',
@@ -79,7 +85,7 @@ prop.table(table(heart_2020$HeartDisease))
 
 ```
 
-After removing those who passed age threshold and were in good overall health, we selected a total sample of 31,857 (only 9.96% of the total sample). The proportion of people suffering from heart disease in this sample rose to 29.76%. Compared to only 8.6% for the entire sample frame, it is already a significant and encouraging improvement - don't forget that we are only referring to the simple conditions of age 45+ and overall health below health.
+Taking the screened non-low-risk people to the next step of decision tree regression, we identified another important signal: **whether or not the person had a stroke.** If there was no stroke the decision tree would assume that the person would not have had a heart attack. In fact if we pick out the people who are already in our risk population who also had a stroke, we can see that the risk of having heart disease if they had a stroke increased from 29.78% to 49.65%. This is also a significant increase. Such a result is not difficult to explain. Stroke is often associated with hardening and blockage of blood vessels, and this often indicates that the patient has a worse blood circulation, which is also an indicator of heart disease. Now that we have greatly identified our high-risk group by age, overall health status, and whether or not we have had a stroke. Let's go one step further and see if there are other factors that can help us determine this. We'll use the data from the further targeted high-risk group in a decision tree regression.\
 
 ```{r,fig.align = 'center',out.width="50%"}
 # Fit decision tree model
@@ -104,7 +110,7 @@ prop.table(table(Stroked$HeartDisease))
 prop.table(table(heart_2020$HeartDisease))
 ```
 
-Taking the screened non-low-risk people to the next step of decision tree regression, we identified another important signal: **whether or not the person had a stroke.** If there was no stroke the decision tree would assume that the person would not have had a heart attack. In fact if we pick out the people who are already in our risk population who also had a stroke, we can see that the risk of having heart disease if they had a stroke increased from 29.76 to 49.65%. This is also a significant increase. Such a result is not difficult to explain. Stroke is often associated with hardening and blockage of blood vessels, and this often indicates that the patient has a worse blood circulation, which is also an indicator of heart disease. Now that we have greatly identified our high-risk group by age, overall health status, and whether or not we have had a stroke. Let's go one step further and see if there are other factors that can help us determine this. We'll use the data from the further targeted high-risk group in a decision tree regression.\
+We were given the simplest decision tree, whether it was male or female. What it tells us is that for these people who are more prone to heart disease, men are at higher risk than women (56.28% for men and 43.46% for women).
 
 ```{r,fig.align = 'center',out.width="50%"}
 
@@ -126,17 +132,39 @@ tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
 
 ```
 
-We were given the simplest decision tree, whether it was male or female. What it tells us is that for these people who are more prone to heart disease, men are at higher risk than women (56.54 for men and 43.72% for women).
+
 
 The ramification plot is
 
 ```{r,fig.align = 'center',out.width="50%"}
 # To be ploted 
-probability <- c(0.2976 ,0.4965,0.5654)
+probability <- c(0.2978 ,0.4965,0.5628)
 
 ```
 
 ![](PNG%20image.png)
+
+```{r}
+# remove stroke to fit logistic regression
+# Stroked <- Stroked[, -5]
+# sapply(lapply(Stroked, unique), length)
+
+# heart_logistic_stro <- glm(HeartDisease~.,data = Stroked,family = 'binomial')
+# nullmod_stro <- glm(HeartDisease~1, data = Stroked, family="binomial")
+# 
+# 1-logLik(heart_logistic_stro)/logLik(nullmod_stro)
+# 1-logLik(stepwise_model)/logLik(nullmod)
+# 
+# pred <- predict(heart_logistic_stro, type = "response")
+# predicted.classes <- ifelse(pred> 0.5, "Yes", "No")
+# table <- table(Stroked$HeartDisease, predicted.classes)
+# table
+# # sensitivity
+# sensitivity <- table[2,2]/(table[2,1] + table[2,2])
+# sensitivity
+```
+
+
 
 ### Model Interpreatation
 
@@ -163,12 +191,24 @@ nullmod <- glm(HeartDisease~1, data = heart_2020, family="binomial")
 
 1-logLik(heart.logistic)/logLik(nullmod)
 1-logLik(stepwise_model)/logLik(nullmod)
+
+
+# predict power
+pred <- predict(heart.logistic, type = "response")
+predicted.classes <- ifelse(pred> 0.05, "Yes", "No")
+table <- table(heart_2020$HeartDisease, predicted.classes)
+table
+# sensitivity
+sensitivity <- table[2,2]/(table[2,1] + table[2,2])
+sensitivity
 ```
 ### Add interaction terms
 The R squared of these two are similar and both poor, so we decided to try adding interaction terms to see if we can predict heart disease better. Interaction term shows that one's effect on response variable depends on the other, with only one of the variable might not have predictive power, but combine them together, we can predict. In case other predictors depends on *PhysicalActivity* (which removed by stepwise process), we keep it to build the model with all interaction terms.
+
+According to our EDA, there are no strong correlation among numerical variables, so we would not include interaction terms of them.
 ```{r}
-formula <- HeartDisease ~ BMI * Smoking * AlcoholDrinking * Stroke * MentalHealth * DiffWalking * Sex * AgeCategory * 
-    Race * Diabetic * GenHealth * SleepTime * Asthma * KidneyDisease * SkinCancer * PhysicalActivity
+formula <- HeartDisease ~ BMI + Smoking + AlcoholDrinking + Stroke + MentalHealth + DiffWalking + Sex + AgeCategory +  
+    Race + Diabetic + GenHealth + SleepTime + Asthma + KidneyDisease + SkinCancer + PhysicalActivity + Race*AgeCategory + Sex*AgeCategory 
 
 heart_logistic_interaction <- glm(formula = formula, data = heart_2020, family = 'binomial')
 summary(heart_logistic_interaction)
@@ -177,7 +217,7 @@ summary(heart_logistic_interaction)
 
 
 ### Analysis of the model
-After stepwise selection, the predictors *PhysicalActivity* was removed from the heart.logistic model, we can apply F-test to see if the reduced model is statistically better. Since the p-value 0.0007 is pretty small at 0.05 significant level, hence, the reduced model is significantly better than the full model.
+After stepwise selection, the predictors *PhysicalHealth* and *PhysicalActivity* were removed from the heart.logistic model, we can apply F-test to see if the reduced model is statistically better. Since the p-value 0.0004292 is pretty small at 0.05 significant level, hence, the reduced model is significantly better than the full model.
 
 ```{r}
 anova(stepwise_model, heart.logistic,test = "Chisq")
@@ -280,3 +320,24 @@ ggplot(coefframe, aes(ageCategroy, coef)) +
 
 
 ### Model Interpreatation
+
+## GAM model
+```{r}
+library(mgcv)
+heart_2020$AgeCategory <- factor(heart_2020$AgeCategory)
+
+formula_am <- HeartDisease ~ s(BMI) + Smoking + AlcoholDrinking + Stroke + s(MentalHealth) + DiffWalking + Sex + Race + Diabetic + GenHealth + s(SleepTime) + Asthma + KidneyDisease + SkinCancer + PhysicalActivity + s(PhysicalHealth)
+formula <- HeartDisease ~ BMI + Smoking + AlcoholDrinking + Stroke + MentalHealth + 
+    DiffWalking + Sex + AgeCategory + Race + Diabetic + GenHealth + 
+    SleepTime + Asthma + KidneyDisease + SkinCancer
+
+heart_am <- gam(formula_am, data = heart_2020, family = binomial)
+heart_glm <- gam(formula, data = heart_2020, family = binomial)
+
+summary(heart_am)
+summary(heart_glm)
+
+AIC(heart_am)
+AIC(heart_glm)
+```
+
