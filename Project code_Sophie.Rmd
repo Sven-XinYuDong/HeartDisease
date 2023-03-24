@@ -29,6 +29,15 @@ data <- read.csv("heart_2020_cleaned.csv")
 heart_2020 <- data[!duplicated(data), ]  # remove duplicate data
 heart_2020$Race[heart_2020$Race != "White"] <- "non-white" # make race binary 
 
+# we might consider to regroup the *AgeGroup* into only 4 groups (< 40, 40-59, 60-79, >80)
+heart_2020$Race[heart_2020$Race != "White"] <- "non-white"
+
+heart_2020$AgeCategory[heart_2020$AgeCategory == "18-24" |heart_2020$AgeCategory ==  "25-29" | heart_2020$AgeCategory == "30-34" | heart_2020$AgeCategory == "35-39"]  <- "<40"
+
+heart_2020$AgeCategory[heart_2020$AgeCategory == "40-44" |heart_2020$AgeCategory ==  "45-49" | heart_2020$AgeCategory == "50-54" | heart_2020$AgeCategory == "55-59"]  <- "40-59"
+
+heart_2020$AgeCategory[heart_2020$AgeCategory == "60-64" |heart_2020$AgeCategory ==  "65-69" | heart_2020$AgeCategory == "70-74" | heart_2020$AgeCategory == "75-79"]  <- "60-79"
+    
 heart_2020 %>% mutate_if(is.character, as.factor) -> heart_2020
 ```
 
