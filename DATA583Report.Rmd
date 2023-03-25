@@ -85,15 +85,13 @@ Figure 1 provides a full description of variables in the dataset, including the 
 | **SkinCancer**       | Have you ever had skin cancer?                                                                                                                                | Binary (Yes, no)                                                           | Imbalanced binary (9% yes, 91% no            |
 |                      |                                                                                                                                                               |                                                                            |                                              |
 
-## Analysis
-
-### Question 1: What lifestyle variables are related to heart disease?
+## Logistic Regression Analysis
 
 Logistic regression is a statistical method used to analyze and model relationships between a binary dependent variable (i.e., one that takes on only two values, such as 0 or 1) and one or more independent variables (also known as predictors or explanatory variables). It is a type of regression analysis that is used to predict the probability of an event occurring based on the values of the independent variables.
 
 Before fitting the model, we processed our data according to the suggestions in our EDA report including removing duplicates, changing *Race* into binary data, and reducing *AgeCategory* into 4 groups.
 
-#### Model Fitting 
+### Model Fitting 
 Interaction term shows that one's effect on response variable depends on the other, with only one of the variable might not have predictive power, but combine them together, we can predict. Based on our EDA, we add interaction terms of *AgeCategory* * *Sex* and *AgeCategory* * *Race* as our full model. 
 
 ```{r}
@@ -126,7 +124,7 @@ heart_logistic_interaction$formula
 ```
 
 
-#### Goodness of Fit Tests
+### Goodness of Fit Tests
 In logistic regression, we can perform an overall goodness-of-fit test using the likelihood ratio test, which compares the full model to a reduced model without the predictors of interest. The test is based on the difference in deviances between the full model and the reduced model, and it follows a chi-squared distribution with degrees of freedom equal to the difference in the number of pameters between the two models. 
 
 The null hypothesis of the likelihood ratio test is that the reduced model fits the data as well as the full model. And the alternative hypothesis is that the full model fits the data significantly better than the reduced model.
@@ -136,7 +134,7 @@ According to the goodness of fit test, we choose the model with interaction term
 anova(heart.logistic, heart_logistic_interaction,test = "LRT")
 ```
 
-#### Variable Selection
+### Variable Selection
 To get a simpler model, we decided to perform the backward elimination stepwise selection based on the AIC. Stepwise selection is a statistical method to identify the best subset of predictors in a regression model. Backward elimination will remove the predictor one by one based on their contribution.
 ```{r}
 stepwise_model_interaction <- step(heart_logistic_interaction, direction = "backward", k = log(nrow(heart_2020)), trace = 0)
@@ -154,15 +152,22 @@ stepwise_model_interaction$formula
 *PhysicalHealth*, *MentalHealth*, and *PhysicalActivity* are removed from the process.
 
 
-#### Model Diagnosis
-Cook's distance is a measure of the influence of each observation on the fitted values of a regression model. A large cook's distance indicates that the corresponding observation has a significant impact on the regression results. By looking through the influential points, we found that the 
+### Model Diagnosis
+Cook's distance is a measure of the influence of each observation on the fitted values of a regression model. A large cook's distance indicates that the corresponding observation has a significant impact on the regression results. By looking through the influential points, we found that the these observations' BMI is higher than normal standard(below 24).
 ```{r}
-cooks_d <- cooks.distance(stepwise_model_interaction)
-plot(cooks_d, type ='o', xlab = "Observation", ylab = "Cooks's distance")
+# cooks_d <- cooks.distance(stepwise_model_interaction)
+# plot(cooks_d, type ='o', xlab = "Observation", ylab = "Cooks's distance")
+plot(stepwise_model_interaction, residuals = TRUE, which = 4)
+print(heart_2020[c(43322, 105416, 254654),])
 ```
 
 
 
+### Question 1: What lifestyle variables are related to heart disease?
+According the final model we select in logistic regression analysis, except *PhysicalHealth*, *MentalHealth*, and *PhysicalActivity*, all the other variables are associated to heart disease.
+```{r}
+summary(stepwise_model_interaction)
+```
 
 
 ### Question 2: What variables are most important to the development of heart disease?
