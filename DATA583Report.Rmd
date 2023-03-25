@@ -164,7 +164,7 @@ print(heart_2020[c(43322, 105416, 254654),])
 
 
 ### Question 1: What lifestyle variables are related to heart disease?
-According the final model we select in logistic regression analysis, except *PhysicalHealth*, *MentalHealth*, and *PhysicalActivity*, all the other variables are associated to heart disease.
+According the final model we select in logistic regression analysis, except *PhysicalHealth*, *MentalHealth*, and *PhysicalActivity*, all the other variables are associated to heart disease. 
 ```{r}
 summary(stepwise_model_interaction)
 ```
@@ -316,8 +316,16 @@ tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
 : Vulnerable Groups Identification
 
 ## Discussion
+```{r}
+summary(stepwise_model_interaction)
+```
 
-The present investigation aimed to develop a better understanding of risk factors that contribute to heart disease by asking three broad questions. First, we investigated what variables are related to the development of heart disease. Our investigation identified 15 relevant variables (body mass index, smoking habits, alcohol habits, prior history of stroke, mental health, difficulty walking, gender, age, race, diabetes diagnosis, general health, sleep time, asthma diagnosis, kidney disease diagnosis, skin cancer diagnosis) that are positively linked to the development of heart disease. Second, we investigated what variables are most important to the development of heart disease. Our investigation showed X, Y, Z, as the most important risk factors to heart disease, with x increasing probability of obtaining heart disease by \_\_-. Third, we investigated what groups of people are most likely to develop heart disease. Our investigation showed that men over the age of 45, with prior history of stroke, and poor health in general, were most likely to experience heart disease.
+The present investigation aimed to develop a better understanding of risk factors that contribute to heart disease by asking three broad questions. First, we investigated what variables are related to the development of heart disease. Our investigation identified 
+- First, according to the summary of our final model in logistic regression analysis, we found *BMI*, *Smoking*, *AlcoholDrinking*, *Stroke*, *DiffWalking*, *Sex*, *AgeCategory*, *Race*, *Diabetic*, *GenHealth*, *SleepTime*, *Asthma*, *KidneyDisease*, *SkinCancer*  are associate with the development of heart disease. 
+
+- Second, according to rank of coefficients of the model, *AgeCategory80 or older*, *GenHealthPoor*, *AgeCategory60-79*, and *GenHealthFair* with coefficients around or above 1.5 are the most important predictors for heart disease.
+
+- Third, we applied decision tree to identify the vulnerable groups of our observations. From 6.85% of low risky group having heart disease to 50.67% of high risk group having heart disease, we group the data into 3 groups. And having stroke before is the main character of the high risky group.
 
 Taken together, the findings from the current investigation identified, in a large-scale and representative sample of residents in the United States, risk factors that may contribute to the development of heart disease, findings of which may have implications for the real world, such as informing medical practitioners.
 
@@ -325,13 +333,13 @@ Taken together, the findings from the current investigation identified, in a lar
 
 While the present investigation yielded several insights into the risk factors related to heart disease, it should be noted that there were also a number of limitations.
 
-One limitation is that, although our investigation yielded a large number of significant risk factors linked to heart disease, thefactors within this investigation is only able to explain a weak proportion of the variation in heart disease, with an adjusted R-squared of **0.2** (though see Ryo et al., 2012 for similar R-squared values). In other words, though risk factors were identified, these risk factors may be less relevant because they may not be the main driving factors behind heart disease onset.
+One limitation is that, although our investigation yielded a large number of significant risk factors linked to heart disease, the factors within this investigation is only able to explain a weak proportion of the variation in heart disease, with an adjusted R-squared of **0.2** (though see Ryo et al., 2012 for similar R-squared values). In other words, though risk factors were identified, these risk factors may be less relevant because they may not be the main driving factors behind heart disease onset.
 
-Why may there be a low R-squared value? There may be a variety of reasons. For one, it is possible that the methods of the current investigation may contribute to a low R-squared value. For example, it is possible that that the current investigation fails to capture important predictor variables (e.g. biological or genetic markers) that are relevant to heart disease onset, to explain for the low variation explained in heart disease. Furthermore, it is also possible that the subjective nature of the methodology (e.g. telephone survey, self-reported heart disease, retrospective self-reports of exercise history) may hinder the extent to which explanatory variables can be related to response variables, compared to more objective measures of heart disease (e.g. biological measurements of heart disease).
+Why may there be a low R-squared value? There may be a variety of reasons. For one, it is possible that the methods of the current investigation may contribute to a low R-squared value. For example, it is possible that that the current investigation fails to capture important predictor variables (e.g. biological or genetic markers) that are relevant to heart disease onset, to explain for the low variation explained in heart disease. Furthermore, it is also possible that the subjective nature of the methodology (e.g. telephone survey, self-reported heart disease, retrospective self-reports of exercise history) may hinder the extent to which explanatory variables can be related to response variables, compared to more objective measures of heart disease (e.g. biological measurements of heart disease). Future work could improve upon methodology (e.g., obtaining objective measurements of heart disease) when investigating risk factors for heart disease.
 
-Second, it is also possible that the current modelling techniques may be the result of low R-squared values. For example, xxx.
+Second, it is also possible that the current modelling techniques may be the result of low R-squared values. For example, diagnostic plots during the fitting of logistic regression models showed that there were a high number of influential points (e.g. potentially due to a large number of imbalanced binary predictors), of which violates one of the assumptions of logistic regression models (that is, lack of influential points) and contributing to poor fit.  Furthermore, another factor that may account for poor model fit of logistic regression models is imbalanced response variables. In the future, alternative modelling techniques should be considered, such as using models that are less susceptible to imbalanced predictors and response variables (e.g. oversampling methods, e.g. Ustyannie & Suprapto, 2020).
 
-Future work should improve upon study methodology and statistical modelling techniques to provide risk factors that have stronger explanatory power on heart disease onset, because xyz.
+
 
 ## References
 
