@@ -1,8 +1,19 @@
 ---
+title: "Project Report - Code"
+author: "Matthew Yau, ZiYing(Sophie) Chen, Xinyu Dong"
+date: "2023-03-09"
 output:
-  pdf_document: default
-  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 11pt
+fig_height: 6
+fig_width: 6
+df_print: kable
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
 
 ```{r, include = FALSE}
 library(dplyr)
@@ -53,7 +64,7 @@ Figure 1 provides a full description of variables in the dataset, including the 
 ##### Figure 1. Variables in the Dataset
 
 | Variable Name        | Questionnaire                                                                                                                                                 | Data Type                                                                  | Observed distribution                        |
-|---------------|---------------------------|---------------|---------------|
+|--------------|--------------------------------|--------------|--------------|
 | **HeartDisease**     | Have you ever had coronary heart disease or myocardial infection in your life?                                                                                | Binary (yes, no)                                                           | Imbalanced binary (9% yes, 91% no)           |
 | **BMI**              | What is your body mass index?                                                                                                                                 | Continuous                                                                 | Normal (mean = 28.3, variance = 40)          |
 | **Smoking**          | Have you smoked at least 100 cigarettes in your entire life?                                                                                                  | Binary (Yes, no)                                                           | Binary (59% no, 41% yes)                     |
@@ -78,12 +89,100 @@ Figure 1 provides a full description of variables in the dataset, including the 
 
 ### Question 1: What lifestyle variables are related to heart disease?
 
-    To examine what lifestyle variables are related to heart disease, we chose to run a logistic regression model. We chose this model because logistic regressions can be used to predict binary responses. Furthermore, this model is interpretable, allowing us to identify important coefficients that contribute to heart disease.
-    To run the logistic regression model, we followed two broad steps: first, we aimed to create the best fitting model by ___xyz(e.g. variable selection, boot)___ steps. Second, we interpret the best model for important coefficients. 
+Logistic regression is a statistical method used to analyze and model relationships between a binary dependent variable (i.e., one that takes on only two values, such as 0 or 1) and one or more independent variables (also known as predictors or explanatory variables). It is a type of regression analysis that is used to predict the probability of an event occurring based on the values of the independent variables.
+
+Before fitting the model, we processed our data according to the suggestions in our EDA report including removing duplicates, changing *Race* into binary data, and reducing *AgeCategory* into 4 groups.
+
+#### Model Fitting 
+Interaction term shows that one's effect on response variable depends on the other, with only one of the variable might not have predictive power, but combine them together, we can predict. Based on our EDA, we add interaction terms of *AgeCategory* * *Sex* and *AgeCategory* * *Race* as our full model. 
+
+```{r}
+formula <- HeartDisease ~ BMI + Smoking + AlcoholDrinking + Stroke + PhysicalHealth + 
+    MentalHealth + DiffWalking + Sex + AgeCategory + Race + Diabetic + 
+    PhysicalActivity + GenHealth + SleepTime + Asthma + KidneyDisease + 
+    SkinCancer + Race*AgeCategory + Sex*AgeCategory 
+
+heart_logistic_interaction <- glm(formula = formula, data = heart_2020, family = 'binomial')
+
+
+
+heart.logistic <- glm(HeartDisease ~ BMI + Smoking + AlcoholDrinking + Stroke + PhysicalHealth + 
+    MentalHealth + DiffWalking + Sex + AgeCategory + Race + Diabetic + 
+    PhysicalActivity + GenHealth + SleepTime + Asthma + KidneyDisease + 
+    SkinCancer , data = heart_2020,family = 'binomial')
+```
+
+
+The formula of our logistic models are:
+Model1: Without interaction terms
+```{r}
+heart.logistic$formula
+```
+
+
+Model2: With the interaction terms
+```{r}
+heart_logistic_interaction$formula
+```
+
+
+#### Goodness of Fit Tests
+In logistic regression, we can perform an overall goodness-of-fit test using the likelihood ratio test, which compares the full model to a reduced model without the predictors of interest. The test is based on the difference in deviances between the full model and the reduced model, and it follows a chi-squared distribution with degrees of freedom equal to the difference in the number of pameters between the two models. 
+
+The null hypothesis of the likelihood ratio test is that the reduced model fits the data as well as the full model. And the alternative hypothesis is that the full model fits the data significantly better than the reduced model.
+
+According to the goodness of fit test, we choose the model with interaction term.
+```{r}
+anova(heart.logistic, heart_logistic_interaction,test = "LRT")
+```
+
+#### Variable Selection
+To get a simpler model, we decided to perform the backward elimination stepwise selection based on the AIC. Stepwise selection is a statistical method to identify the best subset of predictors in a regression model. Backward elimination will remove the predictor one by one based on their contribution.
+```{r}
+stepwise_model_interaction <- step(heart_logistic_interaction, direction = "backward", k = log(nrow(heart_2020)), trace = 0)
+```
+
+The models before and after are listed below:
+Model_full: 
+```{r}
+heart_logistic_interaction$formula
+```
+Model_select:
+```{r}
+stepwise_model_interaction$formula
+```
+*PhysicalHealth*, *MentalHealth*, and *PhysicalActivity* are removed from the process.
+
+
+#### Model Diagnosis
+Cook's distance is a measure of the influence of each observation on the fitted values of a regression model. A large cook's distance indicates that the corresponding observation has a significant impact on the regression results. By looking through the influential points, we found that the 
+```{r}
+cooks_d <- cooks.distance(stepwise_model_interaction)
+plot(cooks_d, type ='o', xlab = "Observation", ylab = "Cooks's distance")
+```
+
+
+
+
 
 ### Question 2: What variables are most important to the development of heart disease?
 
-    xxx
+In the logistic regression model, the estimated coefficients represent the change in the log-odds of the outcome associated with a one-unit increase in the predictor variable, holding other variables constant. Variables with larger coefficients(absolute value) are generally considered more important. But we should combine the p-value of them to see if the association is real or by chance(big p-value).
+
+According to the summary of stepwise model, *AgeCategory80 or older*, *GenHealthPoor*, *AgeCategory60-79*, and *GenHealthFair* are the most important variables indicators for heart disease (please refer to the coefficients and p-values in the following table.)
+
+|        Variable         | Coefficient | p-value  |
+|:-----------------------:|:-----------:|:--------:|
+| AgeCategory 80 or older | 2.104838900 | \< 2e-16 |
+|    GenHealth Poor       | 1.924924675 | \< 2e-16 |
+|      AgeCategory 60-79   | 1.499782865 | \< 2e-16 |
+|      GenHealth Fair      | 1.499782865 | \< 2e-16 |
+
+: Important Variables in the Logistic Regression Model
+
+```{r}
+coef_rank <- sort(abs(coef(stepwise_model_interaction)), decreasing = TRUE)
+```
 
 ### Question 3: In the real world, what groups of people are most likely to develop heart disease?
 
@@ -202,12 +301,12 @@ tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
 
 ```
 
-| Groups                      | Condition                                         | Probability of Having Heart Disease |
-|-------------------|-----------------|------------------------------------|
-| Whole population benchmark  | NA                                                | 9.03%                               |
-| Low risky group             | Age below 59 or in general good health condition  | 6.85%                               |
-| High risky group            | Age above 60 or in health condition below good    | 31.10%                              |
-| Extremely risky group       | In High risky group and had stroke history        | 50.67%                              |
+| Groups                     | Condition                                        | Probability of Having Heart Disease |
+|------------------|-------------------------------|-----------------------|
+| Whole population benchmark | NA                                               | 9.03%                               |
+| Low risky group            | Age below 59 or in general good health condition | 6.85%                               |
+| High risky group           | Age above 60 or in health condition below good   | 31.10%                              |
+| Extremely risky group      | In High risky group and had stroke history       | 50.67%                              |
 
 : Vulnerable Groups Identification
 

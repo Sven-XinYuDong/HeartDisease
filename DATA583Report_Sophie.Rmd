@@ -1,0 +1,217 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r, include = FALSE}
+library(dplyr)
+
+data <- read.csv("heart_2020_cleaned.csv")
+# head(data)
+
+heart_2020 <- data[!duplicated(data), ]  # remove duplicate data
+heart_2020$Race[heart_2020$Race != "White"] <- "non-white" # make race binary 
+
+heart_2020 %>% mutate_if(is.character, as.factor) -> heart_2020
+```
+## Introduction
+Heart disease is a leading cause of death worldwide. Due to the potential for heart disease to cause negative effects, such as death, it may be important to investigate ways to prevent heart disease. 
+
+One way to prevent heart disease is to examine the risk factors for heart disease. Understanding risk factors may help prevent heart disease development because, for example, it may allow medical practitioners to identify individuals who are susceptible to developing heart disease. After identification, early preventative interventions could be applied to this high-risk group, reducing the likelihood of heart disease.
+
+## Research Questions and Hypotheses
+Therefore, the aim of the current investigation is to investigate the factors that contribute to the development of heart disease. More specifically, we investigate the three following questions: 
+
+1. What lifestyle variables are related to the diagnosis of heart disease?
+2. What variables are most important to the diagnosis of heart disease?
+3. What groups of people are most likely to develop heart disease? #3) Does the effect of the most important predictor variable differ across levels of other predictor variables?
+
+We hypothesize that, based on previous research (Ryo, Cho & Kim, 2012), that a number of variables (e.g. body mass index, smoking habits) will be related to heart disease. Furthermore, we will investigate the questions of identifying importance of coefficients, and identification of high risk groups for heart disease in an exploratory manner.
+
+## Methods and Dataset
+
+To investigate our research questions, we obtain a dataset on Kaggle about heart disease, a subset of data collected by the Center for Disease Control and Prevention (CDC) in 2022. The CDC conducted telephone interviews for 401,958 residents of the United States across all 50 states. Participants were interviewed about a number of (that is, 279) general lifestyle factors (e.g. smoking habits) and chronic health diseases. 
+
+The dataset on Kaggle was filtered to contain only variables related to heart disease,  resulting in 18 heart-disease related factors, and cleaned (e.g. missing values were removed), resulting in 319,795 responses with no missing values. Amongst the dataset of 319,795 responses we obtained on Kaggle, 18,078 duplicate responses were found and removed, resulting in a final sample size of 301,717 observations.
+
+Figure 1 provides a full description of variables in the dataset, including the questionnaire presented to interviewees, response type, observed distribution. In total, the dataset contains 17 lifestyle predictor factors (3 numeric, 14 categorical) to investigate on self-reported heart disease. 
+
+##### Figure 1. Variables in the Dataset
+| Variable Name  | Questionnaire              | Data Type|   Observed distribution     |
+|----------------|----------------------------|--------- |--------------|
+| **HeartDisease**     | Have you ever had coronary heart disease or myocardial infection in your life? | Binary (yes, no)   | Imbalanced binary (9% yes, 91% no)      |
+| **BMI**              | What is your body mass index? | Continuous | Normal  (mean = 28.3, variance = 40) |
+| **Smoking**          | Have you smoked at least 100 cigarettes in your entire life? | Binary (Yes, no)     | Binary (59% no, 41% yes)      |
+| **AlcoholDrinking**  | Do you drink heavily? (Men: more than 14 drinks a week, women: more than 7 drinks a week)  | Binary (Yes, no)   | Imbalanced binary (7% yes, 93% no)       |
+| **Stroke**           | Have you ever had a stroke? | Binary (Yes, no)    | Imbalanced binary (4% yes, 96% no)      |
+| **PhysicalHealth**   | Thinking about your physical health, which includes physical illness and injury, for how many days during the past 30 days was your physical health not good?  | Discrete (0-30 days)  | Poisson  (lambda = 3.3) |
+| **MentalHealth**     | Thinking about your mental health, for how many days during the past 30 days was your mental health not good?                                                      | Discrete (0-30 days)  | Poisson  (lambda = 3.9)    |
+| **DiffWalking**      | Do you have serious difficulty walking or climbing stairs? | Binary (Yes, no)    | Imbalanced binary (14% yes, 86% no) 
+| **Sex**              | Are you male or female?       | Binary (Yes, no)    | Binary (48% Male, 52% Female) |
+| **AgeCategory**      | What is your age group?             | Ordinal categorical (e.g. 18-24)   |   Normal      |
+| **Race**             | What is your race? (recoded to binary variable) | Binary (White, non-white) | Imbalanced binary (77% white, 23% non-white)                         |
+| **Diabetic**         | Have you ever had diabetes?  | Nominal categorical (No, borderline diabetes, yes, yes (during pregnancy))    | Positive skew (86% no, 14% non-no)      |
+| **PhysicalActivity** | Have you had physical activity or exercise during the past 30 days other than their regular job | Binary (Yes, no) | Imbalanced binary (78% yes, 22% no)     |
+| **GenHealth**        | Would you say your health in general is                                                                                                                            | Ordinal categorical (Poor, fair, good, very good)    |  Negative skew (poor 4%, fair 10%)                        |
+| **SleepTime**        | On average, how many hours of sleep do you get in a 24-hour period?                                                                                                           | Continuous | Normal  (mean = 7, variance = 2) |
+| **Asthma**           | Have you ever had asthma? | Binary (Yes, no)    | Imbalanced binary (14% yes, 86% no)     |
+| **KidneyDisease**    | Have you ever had kidney disease (not including kidney stones, bladder infections)?                                                                    | Binary (Yes, no)     | Imbalanced binary (4% yes, 96% no)     |
+| **SkinCancer**       | Have you ever had skin cancer? | Binary (Yes, no)     | Imbalanced binary (9% yes, 91% no |
+|                      |                                                                                                                                                                               |            |                          |
+
+
+## Analysis
+### Question 1: What lifestyle variables are related to heart disease?
+Logistic regression is a statistical method used to analyze and model relationships between a binary
+dependent variable (i.e., one that takes on only two values, such as 0 or 1) and one or more
+independent variables (also known as predictors or explanatory variables). It is a type of regression
+analysis that is used to predict the probability of an event occurring based on the values of the
+independent variables.
+
+Before fitting the model, we processed our data according to the suggestions in our EDA report including removing duplicates, changing *Race* into binary data, and reducing *AgeCategory* into 4 groups.
+
+The summary of the full logistic regression model shows that *PhysicalActivity* with p-value 0.16 is not significant in the model. To get a more interpretable model which has less predictors, we chose to perfom the stepwise selection of variables according to the AIC of the model.
+
+In this process, we remove *PhysicalHealth*, *MentalHealth* and *PhysicalActivity*. To make sure the reduced model is statistically better, we perform the Chi squared test, please see the result in following table.
+
+After deciding the model, we try to add the interaction terms of *AgeCategory* with *Sex* and *Race*, which is also suggested in our EDA. Then use the chi squared test again to check if the model with interaction term would be better, and the result suggest us the model without interaction terms is better.
+
+The final model so far is the stepwise model without interaction term and we choose to apply bootstrap to check the model fitness, according to the plots, the model is not a good fit.
+
+
+
+
+### Question 2: What variables are most important to the development of heart disease?
+In the logistic regression model, the estimated coefficients represent the change in the log-odds of the outcome associated with a one-unit increase in the predictor variable, holding other variables constant.
+Variables with larger coefficients(absolute value) are generally considered more important. But we should combine the p-value of them to see if the association is real or by chance(big p-value).
+
+
+
+
+### Question 3: In the real world, what groups of people are most likely to develop heart disease?
+	To examine what groups of people are most likely to develop heart disease, we ran a decision tree classifier model. We chose to run this model because __xyz__ (decision trees provide boundaries that allow us to identify clusters of points that are most likely to develop heart disease).
+	To run the decision tree models, we followed the broad steps of xxx (e.g. cross validation, with 5 folds, followed by cutting and then interpreting the model etc).
+	
+```{r,fig.align = 'center',out.width="50%", include = FALSE}
+# Load data
+library(readr)
+heart_2020 <- read.csv("heart_2020_cleaned.csv",stringsAsFactors = TRUE)
+
+library(tree)
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = heart_2020)
+
+```
+
+```{r, echo = FALSE}
+heart.treecv <- cv.tree(model.trees) # Cross-validation
+plot(heart.treecv)
+title(main = "Figure #. Cross validated mean square error versus tree size", line = 2.5)
+
+
+```
+
+```{r, echo = FALSE}
+
+# Tuning
+heart.tree.prune <- prune.misclass(model.trees, best=5)
+plot(heart.tree.prune)
+text(heart.tree.prune,pretty = 0)
+title(main = "Figure #. 5 node decision tree for predictors on heart disease diagnosis")
+```
+
+```{r,fig.align = 'center',out.width="50%", include = FALSE}
+obs_not_low_risk <- subset(heart_2020,!(AgeCategory %in% c('18-24',
+                                                           '25-29',
+                                                     '30-34',
+                                                     '35-39',
+                                                     '40-44',
+                                                     '45-49',
+                                                     '50-54') |
+                         
+                                 GenHealth %in% c('Good','Very good','Excellent'))
+                         )
+
+#New data Investigation 
+dim(obs_not_low_risk)
+nrow(obs_not_low_risk)/nrow(heart_2020)
+prop.table(table(obs_not_low_risk$HeartDisease))
+prop.table(table(heart_2020$HeartDisease))
+
+```
+
+```{r,fig.align = 'center',out.width="50%", echo = FALSE}
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = obs_not_low_risk)
+
+
+heart.treecv <- cv.tree(model.trees) # Cross-validation
+plot(heart.treecv) 
+
+
+```
+
+```{r, echo = FALSE}
+heart.tree.prune <- prune.misclass(model.trees, best=3)
+plot(heart.tree.prune)
+text(heart.tree.prune,pretty = 0)
+```
+
+```{r, include = FALSE}
+Stroked <- subset(obs_not_low_risk,Stroke == 'Yes')
+
+#New data Investigation 
+dim(Stroked)
+nrow(Stroked)/nrow(heart_2020)
+prop.table(table(Stroked$HeartDisease))
+prop.table(table(heart_2020$HeartDisease))
+```
+
+
+```{r,fig.align = 'center',out.width="50%", echo = FALSE}
+
+
+# Fit decision tree model
+model.trees <- tree(HeartDisease ~ ., data = Stroked)
+
+# Tuning
+#heart.treecv <- cv.tree(model.trees) # Cross-validation
+#plot(heart.treecv) 
+
+
+plot(model.trees)
+text(model.trees,pretty = 0)
+
+
+
+tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
+
+```
+
+
+
+## Discussion
+
+The present investigation aimed to develop a better understanding of risk factors that contribute to heart disease by asking three broad questions. First, we investigated what variables are related to the development of heart disease. Our investigation identified 15 relevant variables (body mass index, smoking habits, alcohol habits, prior history of stroke, mental health, difficulty walking, gender, age, race, diabetes diagnosis, general health, sleep time, asthma diagnosis, kidney disease diagnosis, skin cancer diagnosis) that are positively linked to the development of heart disease. Second, we investigated what variables are most important to the development of heart disease. Our investigation showed X, Y, Z, as the most important risk factors to heart disease, with x increasing probability of obtaining heart disease by __-. Third, we investigated what groups of people are most likely to develop heart disease. Our investigation showed that men over the age of 45, with prior history of stroke, and poor health in general, were most likely to experience heart disease.
+
+Taken together, the findings from the current investigation identified, in a large-scale and representative sample of residents in the United States, risk factors that may contribute to the development of heart disease, findings of which may have implications for the real world, such as informing medical practitioners.
+
+
+
+
+## Limitations and Future Directions
+
+While the present investigation yielded several insights into the risk factors related to heart disease, it should be noted that there were also a number of limitations.
+
+One limitation is that, although our investigation yielded a large number of significant risk factors linked to heart disease, thefactors within this investigation is only able to explain a weak proportion of the variation in heart disease, with an adjusted R-squared of __0.2__ (though see Ryo et al., 2012 for similar R-squared values). In other words, though risk factors were identified, these risk factors may be less relevant because they may not be the main driving factors behind heart disease onset.
+
+Why may there be a low R-squared value? There may be a variety of reasons. For one, it is possible that the methods of the current investigation may contribute to a low R-squared value. For example,  it is possible that that the current investigation fails to capture important predictor variables (e.g. biological or genetic markers) that are relevant to heart disease onset, to explain for the low variation explained in heart disease. Furthermore, it is also possible that the subjective nature of the methodology (e.g. telephone survey, self-reported heart disease, retrospective self-reports of exercise history) may hinder the extent to which explanatory variables can be related to response variables, compared to more objective measures of heart disease (e.g. biological measurements of heart disease).
+
+Second, it is also possible that the current modelling techniques may be the result of low R-squared values. For example, xxx.  
+
+Future work should improve upon study methodology and statistical modelling techniques to provide risk factors that have stronger explanatory power on heart disease onset, because xyz.
+
+
+## References
+
+Ryoo, J.-H., Cho, S. H., &amp; Kim, S.-W. (2012). Prediction of risk factors for coronary heart disease using framingham risk score in Korean men. PLoS ONE, 7(9). https://doi.org/10.1371/journal.pone.0045030 
