@@ -64,7 +64,11 @@ Figure 1 provides a full description of variables in the dataset, including the 
 ##### Figure 1. Variables in the Dataset
 
 | Variable Name        | Questionnaire                                                                                                                                                 | Data Type                                                                  | Observed distribution                        |
+<<<<<<< Updated upstream
 |--------------|--------------------------------|--------------|--------------|
+=======
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------|
+>>>>>>> Stashed changes
 | **HeartDisease**     | Have you ever had coronary heart disease or myocardial infection in your life?                                                                                | Binary (yes, no)                                                           | Imbalanced binary (9% yes, 91% no)           |
 | **BMI**              | What is your body mass index?                                                                                                                                 | Continuous                                                                 | Normal (mean = 28.3, variance = 40)          |
 | **Smoking**          | Have you smoked at least 100 cigarettes in your entire life?                                                                                                  | Binary (Yes, no)                                                           | Binary (59% no, 41% yes)                     |
@@ -307,7 +311,11 @@ tapply(Stroked$HeartDisease, Stroked$Sex, function(x) prop.table(table(x)))
 ```
 
 | Groups                     | Condition                                        | Probability of Having Heart Disease |
+<<<<<<< Updated upstream
 |------------------|-------------------------------|-----------------------|
+=======
+|----------------------------|--------------------------------------------------|-------------------------------------|
+>>>>>>> Stashed changes
 | Whole population benchmark | NA                                               | 9.03%                               |
 | Low risky group            | Age below 59 or in general good health condition | 6.85%                               |
 | High risky group           | Age above 60 or in health condition below good   | 31.10%                              |
